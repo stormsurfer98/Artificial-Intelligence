@@ -1,92 +1,259 @@
-"""+==========================+========-========*========-========+==========================+
-   ||                         WRITING AN AI FOR THE GAME OF OTHELLO                         ||
-   ||  (For an electronic copy in Python 3, go to http://academics.tjhsst.edu/compsci/ai/.) ||
-   ||                      by M. Stueben (Revised: December 11, 2014)                       ||
-   +==========================+========-========*========-========+==========================+
+"""     +==========================+========-========*========-========+==========================+
+        ||               APPLYING THE MINIMAX AI ALGORITHM TO THE GAME OF OTHELLO                ||
+        ||                        by M. Stueben (Revised: January 5, 2015)                       ||
+        +==========================+========-========*========-========+==========================+
+
+              The zeroth rule for problem solving is to come to the problem with a history of
+              successful problem-solving experiences behind you. Consequently, we can rarely
+              afford to NOT complete a difficult assignment. We invent ourselves.
+
+                                                  *  *  *
+
+              The two most common statements made by coders are "How is this possible?" and "Oh
+              no, a special case!". The first indicates that the coder does not understand either
+              the probelm or his/her code. The second indicates a solution has begun.
 
 
-THE GAME OTHELLO. Othello (aka Reversi) is a game played by two players on a board with 8 rows and 8 columns
-and a set of pieces that can change color during the game. The pieces (aka stones and tiles) are white on one
-side and black on the other side. Players alternate placing pieces of their color on an 8 x 8 board. The Human
-(BLACK) moves first vs. Computer (WHITE).
 
-   If a row, column, or diagonal of consecutive pieces (no blanks) all of the same color becomes flanked
-(touched on both ends) by two pieces of the opposite color (one of them being the piece just played, then the
-pieces in between are turned over and all become pieces of the boundary color. Hence, the original name
-"Reversi." In fact, every legal move MUST turn the color of some of the opponent's pieces. Below White makes a
-legal move and turns three black pieces into three white pieces.
+              A SAMPLE 4-PLY DECISION TREE USING THE MINIMAX THEOREM (*) TO FIND BEST MOVE
 
-                    ......W...         ..........         ......W...
-                    ..BBBWBW..    -->  .WBBBWBW..    -->  .WWWWWBW..
-                    ......W...         ..........         ......W...
-                  White to move        White moves         Result
+   In the decision tree below, each node is a tuple (value, row, column). Only the value is shown in the tree.
+The value is the best COMPUTER boardScore that can be expected, with the COMPUTER seeing ahead 4-ply and the
+HUMAN seeing ahead 3-ply. Note that any boardScore is the number of HUMAN's pieces minus the number of
+COMPUTER's pieces. Consequently, the larger score favors the HUMAN, while the smaller score favors the
+COMPUTER.
 
-   If one of the three left-most black pieces (B) was replaced by an empty      +----------------------+
-cell, White's move would have been illegal, because no black piece would       1|.  .  .  .  .  .  .  .|
-have changed color. If a player cannot legally move, he or she must pass       2|.  .  .  .  .  .  .  .|
-the move to the opponent. The game ends when neither player can legally        3|.  .  .  =  .  .  .  .|
-move. This usually occurs because the board fills up.                          4|.  .  =  W  B  .  .  .|
-                                                                               5|.  .  .  B  W  =  .  .|
-   Othello has a fixed starting position, but Reversi does not. See            6|.  .  .  .  =  .  .  .|
-diagram. Reversi players use a common pool of 64 pieces, but each Othello      7|.  .  .  .  .  .  .  .|
-player has his own pile of 32 pieces. If an Othello player plays his final     8|.  .  .  .  .  .  .  .|
-piece--his opponent having passed the move on at least one occasion--the        +----------------------+
-player with pieces can finish making legal moves anyway he wants. Othello        a  b  c  d  e  f  g  h
-is copyrighted (1973), Reversi (invented prior to 1886) is not. Otherwise,
-the games are identical.
+                                      +----+
+                    current board---> |o x |
+                  (COMPUTER to move)  +----+
+                                      / \  \___
+                                     /   \     \___
+                                    /     \__       \___
+ The COMPUTER chooses the          /         \          \
+ move with the MIN value -----> *M=3___      N=5        O=4  <-- These are the 4th-ply board scores that could
+ on this level. However,         / \   \___   /\         /\      occur with optimal play on both sides. The
+ each node on this level is     /   \      \__                   smaller the value, the better for the
+ the MAX value of its          /     \        \__                COMPUTER.
+ children.                    /       \          \__
+                             /         \            \__
+                            /           \              \__
+                           /             \                \__
+                          /               \                  \___
+                         /                 \                     \
+  max (across)        D=-1                *H=3                   L=2   <--HUMAN's possible replies
+                       /\                   /\                    /\
+                      /| \                 /| \                  /| \
+                     / |  \               / |  \                / |  \
+                    /  |   \             /  |   \              /  |   \
+                   /   |    \           /   |    \            /   |    \
+                  /    |     \         /    |     \          /    |     \
+  min (across)  A=-1  B=2    C=4     E=9   C=4   *C=3      I=3   J=4    K=2   <-- COMPUTER's possible replies
+                 /\    /\     /\      /\    /\     /\       /\    /\     /\
+  max (across) -1 -2  1  2   1  4    9  7  1  4   2 *3     1  3  0  4   2 -1  <----- HUMAN's possible replies
+--------------------------------------------------------------------------------------------------------------
 
-   In the above diagram, it is always Black to make his first move. Since a legal move must bound consecutive
-pieces of the opposite color, Black has only four legal moves: c4, d3, e6, and f5. These positions are in-
-dicated by equal signs. In fact, these four moves all lead to the same geometric position either mirrored, or
-rotated 180 degrees, or both. So Black's first move is already known by his opponent.
+NOTES: 1. The (parent) number for any node is either a max or min of the (child) nodes below it. But where do
+          the numbers at the bottom come from? The numbers at the bottom are the board scores (HUMAN points
+          minus COMPUTER points). The COMPUTER tries to go down a path to reach the minimum score for the
+          4-ply level. The HUMAN tries to reach the maximum score for the same level. The COMPUTER chooses the
+          node with the minimum score, but that score is the maximum value of the children's nodes. Again, the
+          COMPUTER chooses the minimum of the HUMAN's maximums. And the COMPUTER assumes the HUMAN will choose
+          the maximum of the COMPUTER's  minimums.
 
-Python's Tk graphics:
-     1) The command exit() seems to cause errors in Tk graphics.
-     2) Tk graphics commands with syntax errors often do NOT stop the program from running. But they
-        do print error messages to the console window.
-     3) Global variables are REQUIRED in Python's Tk graphics.                     +---------------+
-     4) A global variable, say M, cannot be modified unless the word "global"      |  def doit():  |
-        appears on the first line of a function. (I made this mistake several      |      global M |
-        times in writing this program. Argg!) After the word global the list       +---------------+
-        of global variables must follow. See the example on the right.
+       2. Where does the tree come from? The tree is constructed by a depth-first recursive back-tracking
+          search. Consequently, no more than one branch is ever held in memory at one time. But the re-
+          cursion is unusual. We have a maxValue(depth) function and a minValue(depth) function. The maxValue
+          function calls the minValue function, which in turn calls the maxValue function, etc. A base case
+          (depth == 0) will return the best boardScore of all possible moves. WARNING: Your recursive code
+          MUST account for the special case when white (COMPUTER) or black (HUMAN) has no legal move.
 
-ASSIGNMENT: Given this working game of Othello (human (black) vs. computer (white)), write a better strategy.
-            But first ...
+          +------------------------------------------------------------------------------------------+
+          | TECHNICAL NOTE: I noticed that there is much common code shared by the maxValue(depth)   |
+          | function and the minValue(depth) function. This violates the DRY (Don't Repeat Yourself) |
+          | principle of coding. On the other hand, combining the two functions into one function    |
+          | gives us a function that performs two different tasks, and which makes the function more |
+          | difficult to code/understand/modify/debug. To combine the two functions into one function|
+          | would take plenty of this:                                                               |
+          |                                                                                          |
+          |                      if player == COMPUTER: do this; else: do that.                      |
+          |                                                                                          |
+          | Extracting the common code into its own functions turned out to complicate the function, |
+          | even though all coding principles would then seem to be satisfied. What to do?           |
+          |                                                                                          |
+          | When I came to examine this program, which I wrote last year, I couldn't understand my   |
+          | own code at first. This disappointed me because I had made great efforts last year to    |
+          | make my code clear. A couple hours (yes hours) later I not only understood it, but sig-  |
+          | nificantly improved it. My previous implementation of the minimax algorithm had been     |
+          | coded in a grossly inefficient manner. I changed the design, renamed variables, created  |
+          | more descriptive comments, and reduced the minimax code by almost half. So why didn't I  |
+          | code this efficiently the first time? I don't think I can implement a complicated-to-code|
+          | algorithm AND code efficiently at the same time, even when I refactor at the end. By re- |
+          | turning to the code long after I had forgotten how it worked, I was able to see how in-  |
+          | efficiently it was coded (fresh eyes).                                                   |
+          |                                                                                          |
+          | I have three points here. First, the minimax algorithm, as simple as it is to understand,|
+          | is NOT easy to code. Second, this program (outside of the minimax code) has other design |
+          | flaws that would require too much time to fix now. Inefficient design is probably im-    |
+          | possible to avoid, because it is difficult to discover a poor design before one has      |
+          | committed to many blocks of code. And then the correction is not worth the reinvestment  |
+          | of time, because the code--bad as it is--works. Finally, I was able to answer the        |
+          | question posed above.                                                                    |
+          |                                                                                          |
+          | Placing the minimax code into twin recursive functions is the correct way for me to go,  |
+          | because I cannot think of an easier way to both write and understand the minimax         |
+          | algorithm. Keeping the code simple-to-understand is the first principle in programming,  |
+          | from which all other coding principles follow.                                           |
+          +------------------------------------------------------------------------------------------+
 
-            1. We want the program to display black's legal moves with the number of white pieces that would
-               be turned over if black (the human) chooses any candidate move. In fact the code to do this
-               exists in the program. It has just been turned off. Turn it back on.
-            2. The numbers displayed to help black choose his move are 'BLACK' and of a small font height.
-               Make them 'GOLD' and three times as large.
-            3. The program should print the current number of white tiles and black tiles, but somehow the
-               scores are always the same. Fix this.
-            4. Take a look at the computer's strategy. One way to make it considerably stronger is to have it
-               choose a corner whenever one is available. Make this change.
-            5. The computer uses the greedy strategy. This is usually a pretty good strategy, although rarely
-               an optimal strategy. Another reason it is popular is that it is conceptually easy to under-
-               stand and then code. Since we are beginners, we will settle for all the experience we can get
-               with this simple strategy. The problem is that the computer is just too simple-minded. It just
+       3. Python's Tk graphics, REQUIRES that some variables MUST be global to compile. I used four: M for
+          the matrix = Othello board, DEPTH for the maximum ply level of the tree,
+          pointValueMatrixforWhite, and pointValueMatrixforBlack for the board evaluations matrices.
 
-               looks for the cell that turns over the most of the opponent's pieces (1-ply depth). Instead,
-               we should make it 2-ply depth. For each of the computer's legal moves, it should calculate the
-               number of pieces turned over MINUS the number of pieces turned back by the human's best reply.
-               In fact, somewhere in this program is a function called bestHumanResponse() based on the simple
-               greedy strategy that the computer currently uses. Your job is to change the computer's current
-               strategy from 1-ply to 2-ply, using the current bestHumanResponse() function.
-            6. Change the bestHumanResponse() function to a 2-ply search. Wait! See the next task.
-            7. Notice that the initial bestHumanResponse(), and the initial makeComputerReply() functions are
-               identical. The program has violated the design principle DRY (don't repeat yourself). Combine
-               them into ONE function. If you look through this program you will see several functions that
-               work with both the computer's move and the human's move. The simple design of these unisex
-               functions may guide you. Good luck.
-                                                       * * *
-What's next? Answer: THE MINIMAX ALGORITHM with ALPHA-BETA PRUNING. Read about this on the Internet and then
-               modify the computer's strategy to go 3- or 4-ply deep. This will make the program tough for a
-               human to beat. (We can't apply 3-4 ply thinking yet, because it would make the computer's move
-               too slow.) And, of course, you could just wait for the lectures before you write this code.
+       4. Definition: In game theory, a ply is a half move. If each player in a two-player game makes a move,
+          then the position is 2-ply deep.
+
+       5. Definition: A zero-sum game is a game where one player's wins equal the opponent's loses. If we add
+          one player's wins to his opponent's (negative) losses, the sum is always zero.
+
+       6. Note well: In this program, the higher the boardScore the better for the HUMAN (black). Consequent-
+          ly, the COMPUTER is always choosing the move with the minimum boardScore value.
+
+       7. The minimax theorem says that the best move for either player in a two-player zero-sum game is the
+          move that gives the opponent the least number of points (kinda obvious). But this theorem provides
+          a simple strategy for both players: Player A's code is a greedy strategy. Player B's code is an
+          altruistic strategy. The strategies are the same, except with some trivial changes of sign (max to
+          min, and HUMAN to COMPUTER).
+
+       8. As simple as the minimax theorem seems, it is tricky to put into place. I know this from experience.
+          Consider the move/decision/search tree given previously.  What do we say about node M? Node M is the
+          MAXIMUM of its children, and at the same time node M is the MINIMUM of the COMPUTER's choices on
+          node M's level. Consequently, some nodes are both a MAXIMUM and a MINIMUM (in different ways) at the
+          same time. It took me some time to realize that the question "is this node a minimum?" makes no
+          sense without more qualification. Why do I think this program is going to be easier for you than me?
+          Because the comments I left in the sample code are the result of many insights, and questions I had
+          to answer for myself. Still, I removed about three lines of comments
+
+
+
+       9. So, what does the minimax code for Othello look like? First, here is the call to the COMPUTER's
+          move. We need to know the row, column, and (since we already calculated them) the tiles that should
+          be turned over. The global constant DEPTH tells us how many ply (aka half moves, aka tree levels) we
+          need to search to determine the best move. Note that the global DEPTH will be passed as parameter
+          (now "depth", not "DEPTH") which will decrement by 1 with every recursive call.
+
+                           bestRow, bestCol, finalPieces = computersMove(DEPTH)
+          -----------------------------------------------------------------------------------------
+
+      10. You MUST know how the boardScore is calculated. Here is what the function looks like:
+
+                def boardScore(): # The higher the boardScore, the better for the HUMAN.
+                   computerTotal = 0
+                   humanTotal    = 0
+                   for r in range(0, 8):
+                        for c in range(0, 8):
+                            if M[r][c] == COMPUTER:
+                               computerTotal += pointValueMatrixforWhite[r][c]
+                           if M[r][c] == HUMAN:
+                                humanTotal += pointValueMatrixforBlack[r][c]
+                   return humanTotal - computerTotal
+          -----------------------------------------------------------------------------------------
+
+      12. What does the computersMove look like? Here is most of it.
+
+def computersMove(depth): # (even ply) IMPORTANT: This function is similar to the minValue function.
+#---Initialize.
+    depth = depth-1
+    beta  = float( 'inf') # alpha and beta are dummy variables in this assignment. Keep them in, anyway.
+    alpha = float('-inf')
+    setOfMoveValuesAndMoves = []
+
+#---Look at all possible moves for the COMPUTER, and there may be no moves (special case).
+    for r in range(8):
+        for c in range(8):
+            if M[r][c] != 0:
+               continue
+            piecesTurnedOver = LocateTurnedPieces(r, c, COMPUTER)
+            if not piecesTurnedOver:
+               continue
+
+#-----------Make a COMPUTER move, determine its depth-ply value, take it back (and then make another move).
+            makeTheMoveAndTurnOverThePieces(r, c, piecesTurnedOver, COMPUTER) # COMPUTER makes a move.
+            childValue = maxValue(depth-1, alpha, beta),r,c   # = boardScore and location for each move.
+            setOfMoveValuesAndMoves.append(childValue)
+            takeBackTheMoveAndTurnBackOverThePieces(r,c, piecesTurnedOver, COMPUTER)
+
+#-----------Reduce beta if possible. [Keep this dummy comment in.]
+
+#---Return the move with minimum boardScore of all possible COMPUTER moves in the current position.
+#    ...
+          -----------------------------------------------------------------------------------------
+
+      13. Now comes the important question. What does the maxValue function look like? Here is my function
+          with most of the code and a few comments removed. Most of the missing code is fairly simple to re-
+          construct. Keep in mind that the utility functions are already written for you--e.g., the following
+          functions already exist: LocateTurnedPieces(),  makeTheMoveAndTurnOverThePieces(), and
+          takeBackTheMoveAndTurnBackOverThePieces(). Then what makes this function so difficult to write?
+          There are a couple of small details (lines of code that accomplish something) that are hard to
+          think of unless you get deep into the understanding of what is exactly being accomplished. The first
+          small problem to solve is where to put the base case in this recursion.
+
+
+
+
+
+
+def maxValue(depth, alpha, beta): # Recursive (odd ply) returns best move for HUMAN
+#---Return the HUMAN move with MAXIMUM value that can be obtained after COMPUTER's previous move.
+#   The returned tuple looks like this: (value, row, col).
+
+#---Initialize.
+    ...
+    tuplesOfValuesWithTheirMoves = []
+#---Look at all possible moves for HUMAN, and there may be no moves (an important special case).
+    for r in range(8):
+        for c in range(8):
+            ...
+
+#-----------Make a HUMAN move and store the move with its value in tuplesOfValuesWithTheirMoves.
+#           The value of the HUMAN move is the minimum score the COMPUTER can obtain in response.
+            ...
+            childValue = minValue(depth-1, alpha, beta) # recursive case.
+            ...
+
+#-----------Attempt alpha-beta pruning.
+            [Omit this code for now, but keep the place-marker (comment) in your code.]
+
+#---Return
+    ...
+#----------------------------------------------------------------------------------------------------Othello--
+
+      14. Here is some good news. The computersMove function [given previously] is a version of the minValue
+          function which has the same code as the maxValue function (except max and min are switched and HUMAN
+          and COMPUTER are switched). Thus, this code should be easier for you to write than it was for me.
+          [Note: the pruning is different in the minValue and the maxValue function. But this assignment does
+          not require pruning.]
+
+      15. Confused? Too many details? Here is how to continue: Repeatedly re-read this handout. Work on this
+          problem every day and perhaps several times a day. Repeatedly trace examples through the sample tree
+          given previously. (I couldn't understand the implementation of the minimax theorem without seeing
+          these examples.) Read other discussions of the minimax theorem on the Internet. When you discover
+          that your code seems logical, yet fails, you need to ask what is missing. And then trace through the
+          code (with lots of print statements) to watch what is happening on the matrix board (M). TRACING
+          SAMPLE DATA IS HOW ALL ALGORITHMS ARE DEBUGGED. One of the reasons that the minimax algorithm is
+          worth coding is because it gives you significant experience in tracing. Good luck.
+
+      16. Curiously, when the computer plays at 6-ply it seems to apply strategy. But there is no strategy.
+          The computer--or should I say the program--just applies the minimax algorithm with a self-modifying
+          evaluation function. So where is the apparent strategy coming from? The appearance of strategy here
+          is called an "emerging property". Would programs that interact with humans in an efficient way
+          develop some kind of morality as an emerging property? If so, would different programs with
+          different evaluation/fitness/cost functions produce different kinds of morality? Note that different
+          religions promote different moralities. And the same religion in the same place, in same culture,
+          and at the same time may have interpreters of morality that wildly contrast with each other. The
+          subject of morality does not have universal agreement.
 """
-##############################################<START OF PROGRAM>##############################################
 
+##############################################<START OF PROGRAM>##############################################
 def setUpCanvas(root): # These are the REQUIRED magic lines to enter graphics mode.
     root.title("A Tk/Python Graphics Program") # Your screen size may be different from 1270 x 780.
     canvas = Canvas(root, width = 1270, height = 780, bg = 'GREY30')
@@ -94,8 +261,7 @@ def setUpCanvas(root): # These are the REQUIRED magic lines to enter graphics mo
     return canvas
 #----------------------------------------------------------------------------------------------------Othello--
 
-def createMatrix(): # = the initial position, with Black = 1, and white = -1.
-    global M
+def createMatrix(): # = the initial position, with Black = 1, and white = -1. OK
     M = [ [0, 0, 0, 0, 0, 0, 0, 0,],
           [0, 0, 0, 0, 0, 0, 0, 0,],
           [0, 0, 0, 0, 0, 0, 0, 0,],
@@ -108,130 +274,114 @@ def createMatrix(): # = the initial position, with Black = 1, and white = -1.
 #----------------------------------------------------------------------------------------------------Othello--
 
 def initializePointMatrices():
-    global PW, PB
-##--The computer's strategy will be based off of this GLOBAL matrix, which will be modified as
-#   the board configuration changes. Remember: row (going down) is first:  P[row][col]
-    PW = [ [1000,   50,  100,  100,  100,  100,   50, 1000,], # P[0][0], P[0][1], ..., P[0][7]
-           [  50,  -20,  -10,  -10,  -10,  -10,  -20,   50,], # P[1][0], P[1][1], ..., P[1][7]
-           [ 100,  -10,    1,    1,    1,    1,  -10,  100,], # P[2][0], P[2][1], ..., P[2][7]
-           [ 100,  -10,    1,    1,    1,    1,  -10,  100,], # P[3][0], P[3][1], ..., P[3][7]
-           [ 100,  -10,    1,    1,    1,    1,  -10,  100,], # P[4][0], P[4][1], ..., P[4][7]
-           [ 100,  -10,    1,    1,    1,    1,  -10,  100,], # P[5][0], P[5][1], ..., P[5][7]
-           [  50,  -20,  -10,  -10,  -10,  -10,  -20,   50,], # P[6][0], P[6][1], ..., P[6][7]
-           [1000,   50,  100,  100,  100,  100,   50, 1000,],]# P[7][0], P[7][1], ..., P[7][7]
+    global pointValueMatrixforWhite, pointValueMatrixforBlack
+#---The COMPUTER's strategy will be based off of this GLOBAL matrix, which will be modified as
+#   the board configuration changes. Remember: row (going down) is first:  P[row][col].
+    pointValueMatrixforWhite = \
+         [ [48,   6,  6,  6,  6,  6,   6, 48,], # P[0][0], P[0][1], ..., P[0][7]
+           [ 6, -24, -4, -4, -4, -4, -24,  6,], # P[1][0], P[1][1], ..., P[1][7]
+           [ 6,  -4,  1,  1,  1,  1,  -4,  6,], # P[2][0], P[2][1], ..., P[2][7]
+           [ 6,  -4,  1,  1,  1,  1,  -4,  6,], # P[3][0], P[3][1], ..., P[3][7]
+           [ 6,  -4,  1,  1,  1,  1,  -4,  6,], # P[4][0], P[4][1], ..., P[4][7]
+           [ 6,  -4,  1,  1,  1,  1,  -4,  6,], # P[5][0], P[5][1], ..., P[5][7]
+           [ 6, -24, -4, -4, -4, -4, -24,  6,], # P[6][0], P[6][1], ..., P[6][7]
+           [48,   6,  6,  6,  6,  6,   6, 48,],]# P[7][0], P[7][1], ..., P[7][7]
     from copy import deepcopy
-    PB = deepcopy(PW)
-    return PW, PB
+    pointValueMatrixforBlack = deepcopy(pointValueMatrixforWhite)
+    return pointValueMatrixforWhite, pointValueMatrixforBlack
 #----------------------------------------------------------------------------------------------------Othello--
 
 def updateTheFourCorners():
-    global PW, PB
+    global pointValueMatrixforWhite, pointValueMatrixforBlack
 #---1B. Modify upper-left corner cell's values if the HUMAN has taken that corner.
     if M[0][0] == 1:
-        PW[0][1] = -50
-        PW[1][0] = -200
-        PW[1][1] = -50
-        PB[0][1] = 100
-        PB[1][0] = 100
-        PB[1][1] = 100
+        if M[0][2] in [0,-1]: pointValueMatrixforWhite[0][1] = -4 # bad  move for white (computer)
+        if M[2][0] in [0,-1]: pointValueMatrixforWhite[1][0] = -4 # bad  move for white (computer)
+        pointValueMatrixforWhite[1][1] = -4                       # bad  move for white (computer)
+        pointValueMatrixforBlack[1][1] =  3                       # good move for black (human)
 
 #---2B. Modify upper-right corner cell's values if the HUMAN has taken that corner.
     if M[0][7] == 1:
-        PW[0][6] = -50
-        PW[1][7] = -200
-        PW[1][6] = -50
-        PB[0][6] = 100
-        PB[1][7] = 100
-        PB[1][6] = 100
+        if M[0][5] in [0,-1]: pointValueMatrixforWhite[0][6] = -4 # bad  move for white (computer)
+        if M[2][7] in [0,-1]: pointValueMatrixforWhite[1][7] = -4 # bad  move for white (computer)
+        pointValueMatrixforWhite[1][6] = -4                       # bad  move for white (computer)
+        pointValueMatrixforBlack[1][6] =  3                       # good move for black (human)
 
 #---3B. Modify lower-left corner cell's values if the HUMAN has taken that corner.
     if M[7][0] == 1:
-        PW[6][0] = -50
-        PW[6][1] = -200
-        PW[7][1] = -50
-        PB[6][0] = 100
-        PB[6][1] = 100
-        PB[7][1] = 100
+        if M[5][0] in [0,-1]: pointValueMatrixforWhite[6][0] = -4 # bad  move for white (computer)
+        if M[7][2] in [0,-1]: pointValueMatrixforWhite[7][1] = -4 # bad  move for white (computer)
+        pointValueMatrixforWhite[6][1] = -4                       # bad  move for white (computer)
+        pointValueMatrixforBlack[6][1] =  3                       # good move for black (human)
 
 #---4B. Modify lower-right corner cell's values if the HUMAN has taken that corner.
     if M[7][7] == 1:
-        PW[7][6] = -50
-        PW[6][7] = -200
-        PW[6][6] = -50
-        PB[7][6] = 100
-        PB[6][7] = 100
-        PB[6][6] = 100
+        if M[7][5] in [0,-1]: pointValueMatrixforWhite[7][6] = -4 # bad  move for white (computer)
+        if M[5][7] in [0,-1]: pointValueMatrixforWhite[6][7] = -4 # bad  move for white (computer)
+        pointValueMatrixforWhite[6][6] = -4                       # bad  move for white (computer)
+        pointValueMatrixforBlack[6][6] =  3                       # good move for black (human)
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #---1W. Modify upper-left corner cell's values if the COMPUTER has taken that corner.
     if M[0][0] == -1:
-        PW[0][1] = 100
-        PW[1][0] = 100
-        PW[1][1] = 100
-        PB[0][1] = -50
-        PB[1][0] = -200
-        PB[1][1] = -50
+        if M[0][2] in [0,1]: pointValueMatrixforBlack[0][1] = -4 # bad  move for black (human)
+        if M[2][0] in [0,1]: pointValueMatrixforBlack[1][0] = -4 # bad  move for black (human)
+        pointValueMatrixforBlack[1][1] = -4                      # bad  move for black (human)
+        pointValueMatrixforWhite[1][1] =  3                      # good move for white (computer)
 
 #---2W. Modify upper-right corner cell's values if the COMPUTER has taken that corner.
     if M[0][7] == -1:
-        PW[0][6] = 100
-        PW[1][7] = 100
-        PW[1][6] = 100
-        PB[0][6] = -50
-        PB[1][7] = -200
-        PB[1][6] = -50
+        if M[0][5] in [0,1]: pointValueMatrixforBlack[0][6] = -4 # bad  move for black (human)
+        if M[2][7] in [0,1]: pointValueMatrixforBlack[1][7] = -4 # bad  move for black (human)
+        pointValueMatrixforBlack[1][6] = -4                      # bad  move for black (human)
+        pointValueMatrixforWhite[1][6] =  3                      # good move for white (computer)
 
 #---3W. Modify lower-left corner cell's values if the COMPUTER has taken that corner.
     if M[7][0] == -1:
-        PW[6][0] = 100
-        PW[6][1] = 100
-        PW[7][1] = 100
-        PB[6][0] = -50
-        PB[6][1] = -200
-        PB[7][1] = -50
+        if M[5][0] in [0,1]: pointValueMatrixforBlack[6][0] = -4 # bad  move for black (human)
+        if M[7][2] in [0,1]: pointValueMatrixforBlack[7][1] = -4 # bad  move for black (human)
+        pointValueMatrixforBlack[6][1] = -4                      # bad  move for black (human)
+        pointValueMatrixforWhite[6][1] =  3                      # good move for white (computer)
 
 #---4W. Modify lower-right corner cell's values if the COMPUTER has taken that corner.
     if M[7][7] == -1:
-        PW[7][6] = 100
-        PW[6][7] = 100
-        PW[6][6] = 100
-        PB[7][6] = -50
-        PB[6][7] = -200
-        PB[6][6] = -50
+        if M[7][5] in [0,1]: pointValueMatrixforBlack[7][6] = -4 # bad  move for black (human)
+        if M[5][7] in [0,1]: pointValueMatrixforBlack[6][7] = -4 # bad  move for black (human)
+        pointValueMatrixforBlack[6][6] = -4                      # bad  move for black (human))
+        pointValueMatrixforWhite[6][6] =  3                      # good move for white (computer)
 #----------------------------------------------------------------------------------------------------Othello--
-
-
-
 
 def updateTheMiddleRowsAndColumns():
-    global PB, PW
+    global pointValueMatrixforWhite, pointValueMatrixforBlack
     for n in range (2, 6):
         if M[0][n] == -1:
-            PW[1][n] =  20 # TOP    row
-            PB[1][n] = -10 # TOP    row
+            pointValueMatrixforWhite[1][n] =  2 # TOP    row
+            pointValueMatrixforBlack[1][n] = -1 # TOP    row
         if M[7][n] == -1:
-            PW[6][n] =  20 # BOTTOM row
-            PB[6][n] = -10 # BOTTOM row
+            pointValueMatrixforWhite[6][n] =  2 # BOTTOM row
+            pointValueMatrixforBlack[6][n] = -1 # BOTTOM row
         if M[n][0] == -1:
-            PW[n][1] =  20 # LEFT  column
-            PB[n][1] = -10 # LEFT  column
+            pointValueMatrixforWhite[n][1] =  2 # LEFT   column
+            pointValueMatrixforBlack[n][1] = -1 # LEFT   column
         if M[n][7] == -1:
-            PW[n][6] =  20 # RIGHT column
-            PB[n][6] = -10 # RIGHT column
+            pointValueMatrixforWhite[n][6] =  2 # RIGHT  column
+            pointValueMatrixforBlack[n][6] = -1 # RIGHT  column
         if M[0][n] == 1:
-            PW[1][n] = -10 # TOP    row
-            PB[1][n] =  20 # TOP    row
+            pointValueMatrixforWhite[1][n] = -1 # TOP    row
+            pointValueMatrixforBlack[1][n] =  2 # TOP    row
         if M[7][n] == 1:
-            PW[6][n] = -10 # BOTTOM row
-            PB[6][n] =  20 # BOTTOM row
+            pointValueMatrixforWhite[6][n] = -1 # BOTTOM row
+            pointValueMatrixforBlack[6][n] =  2 # BOTTOM row
         if M[n][0] == 1:
-            PW[n][1] = -10 # LEFT  column
-            PB[n][1] =  20 # LEFT  column
+            pointValueMatrixforWhite[n][1] = -1 # LEFT   column
+            pointValueMatrixforBlack[n][1] =  2 # LEFT   column
         if M[n][7] == 1:
-            PW[n][6] = -10 # RIGHT column
-            PB[n][6] =  20 # RIGHT column
+            pointValueMatrixforWhite[n][6] = -1 # RIGHT  column
+            pointValueMatrixforBlack[n][6] =  2 # RIGHT  column
 #----------------------------------------------------------------------------------------------------Othello--
 
-def UpdateThePointMatrices():
+def updateThePointMatrices():
+    initializePointMatrices()
     updateTheFourCorners()
     updateTheMiddleRowsAndColumns()
 #----------------------------------------------------------------------------------------------------Othello--
@@ -251,8 +401,23 @@ def copyMatrixToScreen():
     canvas.update()
 #----------------------------------------------------------------------------------------------------Othello--
 
-def copyOldBoardToScreenInMiniturizedForm(cc, rr):
- #--erase previous miniture board
+def showComputersMovesInRedOnScreen (r, c, pieces):
+#---If white just moved, then make that stone red
+    sy = r*70 + 105
+    sx = c*70 + 85
+    canvas.create_oval(sx-15,sy-15, sx+15, sy+15, fill = 'RED')
+
+#------Turn any black stones partially white if they are about to be about to be turned over.
+    for r,c in pieces:
+           sy = r*70 + 105
+           sx = c*70 + 85
+           canvas.create_oval(sx-15,sy-15, sx+15, sy+15, fill = 'WHITE')
+           canvas.update()
+           sleep(PAUSE_TIME)
+#----------------------------------------------------------------------------------------------------Othello--
+
+def copyOldBoardToScreenInMiniaturizedForm(rr, cc):
+ #--erase previous miniature board
     canvas.create_rectangle(650, 400, 821, 567, width = 5, fill    = 'GRAY30')
     ch = chr(9679)
     for r in range (8):
@@ -269,17 +434,17 @@ def copyOldBoardToScreenInMiniturizedForm(cc, rr):
     canvas.update()      # make all previous changes to the canvas
 #----------------------------------------------------------------------------------------------------Othello--
 
-
-def score(): # returns the number of black and white disks.
+def score(): # returns the number of black disks and white disks.
     whiteTotal = 0; blackTotal = 0
     for r in range(8):
       for c in range (8):
         if M[r][c] ==  1: blackTotal += 1
         if M[r][c] == -1: whiteTotal += 1
-    return (whiteTotal, whiteTotal)
+    return (blackTotal, whiteTotal)
 #----------------------------------------------------------------------------------------------------Othello--
-
-def printMatrices(): # <-- This function prints the matrices M and P to the console for debugging.
+#   This function prints the matrices M , pointValueMatrixforWhite, and pointValueMatrixforBlack
+#   to the console for debugging.
+def printMatrices():
     print('\n Matrix M')
     print ('     0  1  2  3  4  5  6  7')
     print ('  +--------------------------+')
@@ -298,23 +463,23 @@ def printMatrices(): # <-- This function prints the matrices M and P to the cons
     print ('  +--------------------------+')
     print ('M[3][0] =', M[3][0])
 #   ------------------------------------------------
-    print('\n Matrix PW')
+    print('\n Matrix pointValueMatrixforWhite')
     print ('      0    1    2    3    4    5    6    7')
     print ('  +------------------------------------------+')
     for r in range(8):
       print (r, '|', end = '')
       for c in range (8):
-         print ("%5d"%PW[r][c], end = '')
+         print ("%5d"%pointValueMatrixforWhite[r][c], end = '')
       print ("  |")
     print ('  +------------------------------------------+')
 #   ------------------------------------------------
-    print('\n Matrix PB')
+    print('\n Matrix pointValueMatrixforBlack')
     print ('      0    1    2    3    4    5    6    7')
     print ('  +------------------------------------------+')
     for r in range(8):
       print (r, '|', end = '')
       for c in range (8):
-         print ("%5d"%PB[r][c], end = '')
+         print ("%5d"%pointValueMatrixforBlack[r][c], end = '')
       print ("  |")
     print ('  +------------------------------------------+')
 #----------------------------------------------------------------------------------------------------Othello--
@@ -332,11 +497,6 @@ def LocateTurnedPieces(r, c, player): # The pieces turned over are of -player's 
             if M[r][c+n] == player: break
             flipped += ((r,c+n,),)  # <-- We save the cell locations as tuples.
     totalFlipped += flipped
-
-
-
-
-
 
  #--case 2 (move down)
     flipped = []
@@ -404,8 +564,6 @@ def LocateTurnedPieces(r, c, player): # The pieces turned over are of -player's 
             flipped += ((r-n,c+n,),)
     totalFlipped += flipped
 
-
-
  #--case 8 (move down and left)
     flipped = []
     if r < 6 and c > 1 and M[r+1][c-1] == -player:
@@ -420,9 +578,9 @@ def LocateTurnedPieces(r, c, player): # The pieces turned over are of -player's 
     return totalFlipped
 #----------------------------------------------------------------------------------------------------Othello--
 
-def setUpInitialBoard(canvas):
-    global M; ch = chr(9679)
-
+def setUpInitialBoard(): #OK
+    ch = chr(9679)
+    Board  = createMatrix()
  #--print title
     canvas.create_text(330, 50, text = "OTHELLO with AI", \
                        fill = 'WHITE',  font = ('Helvetica', 20, 'bold'))
@@ -464,15 +622,8 @@ wins.\n5) A legal move MUST cause some pieces to turn color."
     (BLACK, WHITE) = score()
     stng = 'BLACK = ' + str(BLACK) + '\nWHITE  = ' + str(WHITE)
     canvas.create_text(800, 200, text = stng, fill = 'WHITE',  font = ('Helvetica', 20, 'bold'))
-    stng = "Suggested reply (col, row): (c, 4)"
-    canvas.create_text     (755,350,text = stng, fill = 'GREEN',  font = ('Helvetica', 10, 'bold'))
+    return Board
 #----------------------------------------------------------------------------------------------------Othello--
-
-
-
-
-
-
 
 def illegalClick(x, y): # Click is not on board or click is on an already-filled cell.
     player = 1 # player = Black
@@ -522,11 +673,15 @@ def legalMove(player): # Check to see if any pieces will be turned over.
     return True
 #----------------------------------------------------------------------------------------------------Othello--
 
-def makeMove(c, r, pieces, player):
+def makeMove(r, c, pieces, player):
     global M
     if player not in [1, -1]: exit('ERROR: BAD PLAYER'+ str(player))
+    if pieces == []: return
  #--make the player's legal move in matrix
     M[r][c] = player
+
+    if player == COMPUTER:
+        showComputersMovesInRedOnScreen(r, c, pieces)
 
  #--flip pieces to same color as the player
     for elt in pieces:
@@ -538,17 +693,13 @@ def makeMove(c, r, pieces, player):
  #--erase old score and previous move
     canvas.create_rectangle(650, 160, 960, 310, width = 5, fill    = 'GRAY30')
 
-
-
-
-
  #--print new score
     (BLACK, WHITE) = score()
     stng = 'BLACK = ' + str(BLACK) + '\nWHITE  = ' + str(WHITE)
     canvas.create_text(800, 200, text = stng, \
                        fill = 'WHITE',  font = ('Helvetica', 20, 'bold'))
 
- #--print previous move on miniture board
+ #--print previous move on miniature board
     position = "previous move: "+ str(chr(c + 97))+str(r+1)
     canvas.create_text(800, 250, text = position, \
                        fill = 'WHITE',  font = ('Helvetica', 20, 'bold'))
@@ -557,66 +708,117 @@ def makeMove(c, r, pieces, player):
        canvas.create_text(c*20 + 665, r*20 + 413, text = 'W', fill = 'WHITE', \
                              font = ('Helvetica', 9, 'bold') )
 #----------------------------------------------------------------------------------------------------Othello--
+
 def quit():
-    canvas.create_text(330, 350, text = "GAME OVER", \
-                       fill = 'RED',  font = ('Helvetica', 40, 'bold'))
+    blackScore, whiteScore = score()
+    if   blackScore < whiteScore: msg = 'WHITE WON'
+    elif whiteScore < blackScore: msg = 'BLACK WON'
+    else:                         msg = '  DRAW!  '
+    canvas.create_text(320, 350, text = msg, fill = 'RED',  font = ('Helvetica', 40, 'bold'))
     stng = 'THERE ARE NO LEGAL MOVES FOR EITHER PLAYER.'
     canvas.create_rectangle(655, 260, 955, 300, width = 0, fill = 'GRAY30')
     canvas.create_text(805, 280, text = stng, fill = 'GOLD',  font = ('Helvetica', 9, 'bold'))
 #----------------------------------------------------------------------------------------------------Othello--
 
-def totalPointsGainedFromFlippingPieces(player, r,c, pieces):
+def totalPointsGainedFromFlippingPieces(player, r, c, pieces):
     if player == COMPUTER:
-       total = PW[r][c]          # total = the points associated with the piece played on the board.
+       total = pointValueMatrixforWhite[r][c]          # total = the points associated with the piece played.
        for (rr,cc) in pieces:
-           total += 2*PW[rr][cc] # Add the values associated with the flipped pieces.
+           total += pointValueMatrixforWhite[rr][cc]   # Add the values associated with the flipped pieces.
        return total
     if player == HUMAN:
-       total = PB[r][c]          # total = the points associated with the piece played on the board.
+       total = pointValueMatrixforBlack[r][c]          # total = the points associated with the piece played.
        for (rr,cc) in pieces:
-           total += 2*PB[rr][cc] # Add the values associated with the flipped pieces.
+           total += pointValueMatrixforBlack[rr][cc]   # Add the values associated with the flipped pieces.
        return total
     exit('ERROR in totalPointsGainedFromFlippingPieces() player = ' + str(player))
-#----------------------------------------------------------------------------------------------------Othello--
-
-def makeComputerReply():
-    UpdateThePointMatrices()
-#--Make a move that picks up the most points using the point matrix (PW).
-    bestRow = -1
-    bestCol = -1
-    maxTotal = float('-inf')
-    for r in range(0, 8):
-        for c in range(0, 8):
-           if M[r][c] == 0:
-              pieces = LocateTurnedPieces(r, c, COMPUTER)
-              if len(pieces) == 0:
-                 continue
-              total = totalPointsGainedFromFlippingPieces(COMPUTER, r, c, pieces)
-              if maxTotal < total:
-                 maxTotal = total
-                 bestRow  = r
-                 bestCol  = c
-                 finalPieces = pieces
-    makeMove(bestCol, bestRow, finalPieces, COMPUTER)
-#   printBestPotentialReply(COMPUTER) # <--Optional feature
 #----------------------------------------------------------------------------------------------------Othello--
 
 def displayAllLegalMovesForHumanPlayer(kolor):
     for r in range(0, 8):
         for c in range(0, 8):
-           if M[r][c] == 0: # an empty cell contains a zero integer.
+           kkolor = kolor
+           if M[r][c] == 0:
               total  = len(LocateTurnedPieces(r, c, HUMAN))
            if M[r][c] == 0 and total != 0:
               sy = r*70 + 109
               sx = c*70 + 85
-              canvas.create_text( sx, sy, text = str(total), fill = kolor, font = ('Helvetica', 10, 'bold') )
+              if r == 0 or c == 0 or r == 7 or c == 7: kkolor = kolor
+              canvas.create_text(sx, sy, text = str(total), fill = kkolor, \
+                                 font = ('Helvetica', 15, 'bold') )
 #----------------------------------------------------------------------------------------------------Othello--
 
-def click(evt): # A legal move is guaranteed to exist.
+def printTimeSpentThinking(startTime, player):
+    assert player in {COMPUTER, HUMAN}
+    if player == COMPUTER:
+       msg = 'Computer thinks for ' + str(abs(round(clock() - startTime - PAUSE_TIME, 2))) + \
+             ' seconds at depth of ' + str(DEPTH) +'.'
+    if player == HUMAN:
+       msg = 'Human thinks for '  + str(round(clock() - startTime, 2)) + ' seconds.'
+    canvas.create_rectangle(620, 340, 990, 365, width = 0, fill = 'GRAY30')
+    canvas.create_text(800, 352, text = msg, fill = 'WHITE',  font = ('Helvetica', 12, 'bold'))
+#----------------------------------------------------------------------------------------------------Othello--
+
+def boardScore(): # The higher the boardScore, the better for the HUMAN.
+   computerTotal = 0
+   humanTotal    = 0
+   for r in range(0, 8):
+        for c in range(0, 8):
+            if M[r][c] == COMPUTER:
+                computerTotal += pointValueMatrixforWhite[r][c]
+            if M[r][c] == HUMAN:
+                humanTotal += pointValueMatrixforBlack[r][c]
+   return humanTotal - computerTotal
+#----------------------------------------------------------------------------------------------------Othello--
+
+def makeTheMoveAndTurnOverThePieces(r, c, piecesTurnedOver, player):
+    global M
+
+#---Double check that our move is made to an empty cell.
+    assert M[r][c] == 0, ['player =', str(player)]
+
+#---Make the move
+    M[r][c] = player
+
+#---Double check that the pieces we are turning over are of the opposite color of our player.
+    piecesAreOppositeColorOfPlayer = True
+    for (r,c) in piecesTurnedOver:
+        if M[r][c] != -player:
+           piecesAreOppositeColorOfPlayer = False
+    assert piecesAreOppositeColorOfPlayer == True
+
+#---Turn the pieces over.
+    for (r,c) in piecesTurnedOver:
+        M[r][c] = player
+#----------------------------------------------------------------------------------------------------Othello--
+
+def takeBackTheMoveAndTurnBackOverThePieces(r, c, piecesTurnedOver, player):
+    global M
+#---Double check that we are turning back a piece with the same color as player.
+    assert M[r][c] == player, ['player =', str(player), 'M[r][c] =', M[r][c], '(r,c) =', (r,c)]
+
+#---Take the move back.
+    M[r][c] = 0
+
+#---Double check that the pieces we are turning over are of the same color of our player.
+    piecesAreSameColorAsPlayer = True
+    for (r,c) in piecesTurnedOver:
+        if M[r][c] != player:
+           piecesAreSameColorAsPlayer = False
+    assert piecesAreSameColorAsPlayer == True
+
+#---Turn the pieces back over.
+    for (r,c) in piecesTurnedOver:
+        M[r][c] = -player
+#-------------------------------------------=---------**---------=-----------------------------------Othello--
+
+########################################## THE MOVES ARE MADE HERE ###########################################
+def click(evt): # The evt = (evt.x, evt.y) parameter is the screen location on the mouse click.
+# A legal move is guaranteed to exist.
     displayAllLegalMovesForHumanPlayer('DARKGREEN')
 
-    printMatrices()
-
+ #--Erase computer's thinking time as computer starts to think about the next move
+    canvas.create_rectangle(620, 340, 990, 365, width = 0, fill = 'GRAY30')
  #--If move is off board, or cell full, or no opp. neighbor, then CLICK AGAIN.
     if illegalClick(evt.x, evt.y):
         canvas.create_rectangle(660, 270, 940,300, width = 0, fill = 'GRAY30')
@@ -625,195 +827,174 @@ def click(evt): # A legal move is guaranteed to exist.
         return
 
  #--Find matrix coordinates (c,r) in terms of mouse coordinates (evt.x, evt.y).
-    c = (evt.x-50)//70
     r = (evt.y-70)//70
+    c = (evt.x-50)//70
 
- #--if none of the computer's pieces will be turned, then CLICK AGAIN.
+ #--if none of the COMPUTER's pieces will be turned, then CLICK AGAIN.
     pieces     = LocateTurnedPieces(r, c, HUMAN)
     if pieces == []:
        canvas.create_rectangle(660, 270, 940,300, width = 0, fill = 'GRAY30')
        stng = 'Your last mouse click did NOT turn a piece.'
        canvas.create_text(800, 280, text = stng, fill = 'ORANGE',  font = ('Helvetica', 9, 'bold'))
+       displayAllLegalMovesForHumanPlayer('YELLOW')
        return
 
- #--Make human move(s) and computer reply/replies.
-    copyOldBoardToScreenInMiniturizedForm(c,r)
-    makeMove(c, r, pieces, HUMAN)
-    canvas.create_rectangle(655, 330, 870,370, width = 0, fill = 'grey30')
-    if legalMove(HUMAN) and not legalMove(COMPUTER): return
+ #--MAKE HUMAN MOVE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    copyOldBoardToScreenInMiniaturizedForm(r, c)
+    makeMove(r, c, pieces, HUMAN) # The HUMAN clicked on position r,c.
+    if legalMove(HUMAN) and not legalMove(COMPUTER):
+        return
 
- #--Make computer reply/replies (1 = BLACK = human, -1 = computer = WHITE)
-    if legalMove(COMPUTER): makeComputerReply() # <--This is the computer's strategy (IMPORTANT!).
-    while legalMove(COMPUTER) and not legalMove(HUMAN):
-        makeComputerReply()
-    #displayAllLegalMovesForHumanPlayer('BLACK')
+ #--FIND AND MAKE COMPUTER REPLY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    if legalMove(COMPUTER):
+        startTime = clock()
+        bestRow, bestCol, finalPieces = computersMove(DEPTH) # best COMPUTER response for given depth
+        makeMove(bestRow, bestCol, finalPieces, COMPUTER)
+        printTimeSpentThinking(startTime, COMPUTER)
 
+    while legalMove(COMPUTER) and not legalMove(HUMAN): # If the human can't move then move again.
+        startTime = clock()
+        bestRow, bestCol, finalPieces = computersMove(DEPTH) # best COMPUTER Response for depth
+        makeMove(bestRow, bestCol, finalPieces, COMPUTER)
+        printTimeSpentThinking(startTime, COMPUTER)
+
+    displayAllLegalMovesForHumanPlayer('RED')
+    startTime = clock()
     if not legalMove(HUMAN) and not legalMove(COMPUTER): quit()
  #-- Note: legal move for human must now necessarily exist.
     return
 #----------------------------------------------------------------------------------------------------Othello--
 
-def bestHumanResponse():
-    UpdateThePointMatrices()
-#--Make a move that picks up the most points using the point matrix (PB).
-    bestRow = -1
-    bestCol = -1
-    maxTotal = float('-inf')
-    for r in range(0, 8):
-        for c in range(0, 8):
-           if M[r][c] == 0:
-              pieces = LocateTurnedPieces(r, c, HUMAN)
-              if len(pieces) == 0:
-                 continue
-              total = totalPointsGainedFromFlippingPieces(HUMAN, r, c, pieces)
-              print
-              if maxTotal < total:
-                 maxTotal = total
-                 bestRow = r
-                 bestCol = c
-                 finalPieces = pieces
-    return maxTotal, bestRow, bestCol
+def computersMove(depth): # (even ply) This function is similar to the minValue function.
+#---Initialize.
+    depth = depth-1
+    beta  = float( 'inf')
+    alpha = float('-inf')
+    setOfMoveValuesAndMoves = []
 
+#---Look at all possible moves for the COMPUTER, and there may be no moves (special case).
+    for r in range(8):
+        for c in range(8):
+            if M[r][c] != 0:
+               continue
+            piecesTurnedOver = LocateTurnedPieces(r, c, COMPUTER)
+            if not piecesTurnedOver:
+               continue
 
+            if depth == 0:
+              return boardScore()
+            if not(legalMove()):
+              return maxValue(depth-1, alpha, beta),r,c
 
+#-----------Make a COMPUTER move, determine its depth-ply value, take it back (and then make another move).
+            makeTheMoveAndTurnOverThePieces(r, c, piecesTurnedOver, COMPUTER) # COMPUTER makes a move.
+            childValue = maxValue(depth-1, alpha, beta),r,c   # = boardScore and location for each  move.
+            setOfMoveValuesAndMoves.append(childValue)
+            takeBackTheMoveAndTurnBackOverThePieces(r,c, piecesTurnedOver, COMPUTER)
 
+#-----------Reduce beta if possible.
+            if childValue < beta: beta = childValue
+            if beta <= alpha: return childValue
 
-#===================================<GLOBAL CONSTANTS and GLOBAL IMPORTS>=====================================
+#---Return the move with minimum boardScore of all possible COMPUTER moves in the current position.
+    return min(setOfMoveValuesAndMoves)
+#----------------------------------------------------------------------------------------------------Othello--
 
-# Global Variables should be avoided. But in Python's Tk graphics this is impossible.
-from tkinter  import *   # <-- Use Tkinter in Python 2.x
-root     =  Tk()
-canvas   =  setUpCanvas(root)
-PW, PB   =  initializePointMatrices()
-M        =  createMatrix() # <-- No variable can be passed to the click function.
-HUMAN    =  1 # = Black
-COMPUTER = -1 # = White
-GLOBAL   = True
-#====================================================<MAIN>===================================================
+def maxValue(depth, alpha, beta): # Recursive (odd ply) returns best move for HUMAN
+#---Return the HUMAN move with MAXIMUM value that can be obtained after COMPUTER's previous move.
+#   The returned tuple looks like this: (value, row, col).
+
+#---Initialize.
+    depth = depth-1
+    setOfMoveValuesAndMoves = []
+    tuplesOfValuesWithTheirMoves = []
+
+#---Look at all possible moves for HUMAN, and there may be no moves (an important special case).
+    for r in range(8):
+        for c in range(8):
+            if M[r][c] != 0:
+               continue
+            piecesTurnedOver = LocateTurnedPieces(r, c, HUMAN)
+            if not piecesTurnedOver:
+               continue
+
+            if depth == 0:
+              return boardScore()
+            if not(legalMove()):
+              return minValue(depth-1, alpha, beta)
+
+#-----------Make a HUMAN move and store the move with its value in tuplesOfValuesWithTheirMoves.
+#           The value of the HUMAN move is the minimum score the COMPUTER can obtain in response.
+            makeTheMoveAndTurnOverThePieces(r, c, piecesTurnedOver, HUMAN) # HUMAN makes a move.
+            childValue = minValue(depth-1, alpha, beta) # recursive case.
+            setOfMoveValuesAndMoves.append(childValue)
+            takeBackTheMoveAndTurnBackOverThePieces(r,c, piecesTurnedOver, HUMAN)
+
+#-----------Attempt alpha-beta pruning.
+            if childValue > alpha: alpha = childValue
+            if beta <= alpha: return childValue
+
+#---Return
+    return max(setOfMoveValuesAndMoves)
+#----------------------------------------------------------------------------------------------------Othello--
+
+def minValue(depth, alpha, beta): # Recursive (even ply) Returns best move for COMPUTER.
+#---Return the COMPUTER move with MINIMUM value that can be made after HUMAN's previous move. The returned
+#   tuple looks like this: (value, row, col).
+
+#---Initialize.
+    depth = depth-1
+    setOfMoveValuesAndMoves = []
+    tuplesOfValuesWithTheirMoves = []
+
+#---Look at all possible moves for HUMAN, and there may be no moves (an important special case).
+    for r in range(8):
+        for c in range(8):
+            if M[r][c] != 0:
+               continue
+            piecesTurnedOver = LocateTurnedPieces(r, c, COMPUTER)
+            if not piecesTurnedOver:
+               continue
+
+            if depth == 0:
+              return boardScore()
+            if not(legalMove()):
+              return maxValue(depth-1, alpha, beta)
+
+#-----------Make a COMPUTER move and store the move with its value in tuplesOfValuesWithTheirMoves.
+#           The value of the COMPUTER's move is the maximum score the HUMAN can obtain in response.
+            makeTheMoveAndTurnOverThePieces(r, c, piecesTurnedOver, COMPUTER) # COMPUTER makes a move.
+            childValue = maxValue(depth-1, alpha, beta) # recursive case.
+            setOfMoveValuesAndMoves.append(childValue)
+            takeBackTheMoveAndTurnBackOverThePieces(r,c, piecesTurnedOver, COMPUTER)
+
+#-----------Attempt alpha-beta pruning.
+            if childValue < beta: beta = childValue
+            if beta <= alpha: return childValue
+
+#---Return
+    return min(setOfMoveValuesAndMoves)
+#====================================<GLOBAL CONSTANTS and GLOBAL IMPORTS>====================================
+
+from tkinter  import Tk, Canvas, YES, BOTH  # <-- Use Tkinter (capital "T") in Python 2.x
+from time     import clock, sleep
+from sys      import setrecursionlimit; setrecursionlimit(100) # 1000 = default.
+PAUSE_TIME =  0.5                           # used to see the tiles changinging colors.
+root       =  Tk()
+canvas     =  setUpCanvas(root)
+pointValueMatrixforWhite, pointValueMatrixforBlack =  initializePointMatrices() # <-- Global.
+M          =  createMatrix()            # <-- Global, because no variable can be passed to the click function.
+HUMAN      =  1 # = Black
+COMPUTER   = -1 # = White
+DEPTH      =  6 # if DEPTH = 4, the computer can be beaten occasionally, and 2/3 of the nodes are pruned!
+                # At depth = 8, the computer will rarely take longer than 11 seconds.
+#===================================================<MAIN>====================================================
 
 def main():
-    root.bind('<Button-1>', click) # 1 = LEFT  mouse button.
-    root.bind('<Button-3>', click) # 3 = RIGHT mouse button.
-    setUpInitialBoard(canvas)
-    root.mainloop()                # Now the graphics window waits for the click function to be called.
+    root.bind('<Button-1>', click) # 1 = LEFT  mouse button calls the click function.
+    root.bind('<Button-3>', click) # 3 = RIGHT mouse button calls the click function.
+    setUpInitialBoard()
+    root.mainloop()                # The window waits for the click function to be called.
 #----------------------------------------------------------------------------------------------------Othello--
 if __name__ == '__main__':  main()
 ###############################################<END OF PROGRAM>###############################################
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-"""
-def makeComputerReply2():
-    global M
-
-    UpdateThePointMatrices()
-    print ('===================== MAKE COMPUTER MOVE ==========================')
-    printMatrices()
-
-#--Make a move that picks up the most points using the point matrix (P).
-    bestRow = -1
-    bestCol = -1
-    maxTotal = -2000
-    for r in range(0, 8):
-        for c in range(0, 8):
-           if M[r][c] == 0:
-              computerPieces = LocateTurnedPieces(r, c, COMPUTER)
-              if len(computerPieces) == 0:
-                 continue
-              from copy import deepcopy
-              MM = deepcopy (M)
-              totalComputer = totalPointsGainedFromFlippingPieces(COMPUTER, r, c, computerPieces)
-
-              M[r][c] = COMPUTER
-              for elt in computerPieces:
-                  M[elt[0]][elt[1]] = COMPUTER #--flip pieces to same color as the computer
-              totalHuman, rr, cc,    = bestHumanResponse()
-              if maxTotal < totalComputer-totalHuman:
-                 maxTotal = totalComputer-totalHuman
-                 bestRow = r
-                 bestCol = c
-                 finalPieces = computerPieces
-              M = deepcopy(MM)
-    makeMove(bestCol, bestRow, finalPieces, COMPUTER)
-"""
-
-
-
-
-## #--Move into upper left corner (0,0) if possible.
-##
-##    pieces = LocateTurnedPieces (0, 0, COMPUTER)
-##    if pieces != []:
-##       makeMove(0, 0, pieces, COMPUTER)
-##       printBestPotentialReply(COMPUTER) # <--Optional feature
-##       return
-##
-## #--Move into lower right corner (7,7) if possible.
-##    pieces = LocateTurnedPieces(7, 7, COMPUTER)
-##    if pieces != []:
-##       makeMove(7, 7, pieces, COMPUTER)
-##       printBestPotentialReply(COMPUTER) # <--Optional feature
-##       return
-##
-## #--Move into lower left corner (0,7) if possible.
-##    pieces = LocateTurnedPieces(0, 7, COMPUTER)
-##    if pieces != []:
-##       makeMove(7, 0, pieces, COMPUTER)
-##       printBestPotentialReply(COMPUTER) # <--Optional feature
-##       return
-##
-## #--Move into upper right corner (7,0) if possible.
-##    pieces = LocateTurnedPieces(7, 0, COMPUTER)
-##    if pieces != []:
-##       makeMove(0, 7, pieces, COMPUTER)
-##       printBestPotentialReply(COMPUTER) # <--Optional feature
-##       return

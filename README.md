@@ -16,7 +16,7 @@ $ python3 file_name.py
 3. **Fibonacci** (fibonacci.py): eight (8) different ways to find the *n*th Fibonacci number.
 4. **Game of Ghost** (ghost.py): human v. computer game of Ghost (full instructions can be found online).
 5. **Word Ladder** (lab04.py): finds the shortest one-letter difference path between any two words (if possible) utilizing A*.
-6. **Game of Othello** (othello.py): human v. computer game of Othello (full instructions can be found online).
+6. **Game of Othello** (othello.py): human v. computer game of Othello (full instructions can be found online) utilizing the minimax algorithm and alpha-beta pruning.
 7. **Random** (quiz_random.py): five (5) different ways to generate a random number.
 8. **Reverse** (reversequiz.py): seven (7) different ways to reverse a list.
 9. **Railroad** (railroad.py): finds the shortest path between any two railroad stations utilizing A*.

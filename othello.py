@@ -881,23 +881,22 @@ def computersMove(depth): # (even ply) This function is similar to the minValue 
             if not piecesTurnedOver:
                continue
 
-            if depth == 0:
-              return boardScore()
-            if not(legalMove()):
-              return maxValue(depth-1, alpha, beta),r,c
-
 #-----------Make a COMPUTER move, determine its depth-ply value, take it back (and then make another move).
             makeTheMoveAndTurnOverThePieces(r, c, piecesTurnedOver, COMPUTER) # COMPUTER makes a move.
-            childValue = maxValue(depth-1, alpha, beta),r,c   # = boardScore and location for each  move.
+            if depth == 0:
+              childValue = boardScore(),r,c
+            else:
+              childValue = maxValue(depth-1, alpha, beta),r,c   # = boardScore and location for each  move.
             setOfMoveValuesAndMoves.append(childValue)
             takeBackTheMoveAndTurnBackOverThePieces(r,c, piecesTurnedOver, COMPUTER)
 
 #-----------Reduce beta if possible.
-            if childValue < beta: beta = childValue
-            if beta <= alpha: return childValue
+            if childValue[0] < beta: beta = childValue[0]
+            if beta <= alpha: return childValue[1],childValue[2],LocateTurnedPieces(childValue[1], childValue[2], COMPUTER)
 
 #---Return the move with minimum boardScore of all possible COMPUTER moves in the current position.
-    return min(setOfMoveValuesAndMoves)
+    bestMove = min(setOfMoveValuesAndMoves)
+    return bestMove[1],bestMove[2],LocateTurnedPieces(bestMove[1], bestMove[2], COMPUTER)
 #----------------------------------------------------------------------------------------------------Othello--
 
 def maxValue(depth, alpha, beta): # Recursive (odd ply) returns best move for HUMAN
@@ -905,8 +904,6 @@ def maxValue(depth, alpha, beta): # Recursive (odd ply) returns best move for HU
 #   The returned tuple looks like this: (value, row, col).
 
 #---Initialize.
-    depth = depth-1
-    setOfMoveValuesAndMoves = []
     tuplesOfValuesWithTheirMoves = []
 
 #---Look at all possible moves for HUMAN, and there may be no moves (an important special case).
@@ -918,16 +915,14 @@ def maxValue(depth, alpha, beta): # Recursive (odd ply) returns best move for HU
             if not piecesTurnedOver:
                continue
 
-            if depth == 0:
-              return boardScore()
-            if not(legalMove()):
-              return minValue(depth-1, alpha, beta)
-
 #-----------Make a HUMAN move and store the move with its value in tuplesOfValuesWithTheirMoves.
 #           The value of the HUMAN move is the minimum score the COMPUTER can obtain in response.
             makeTheMoveAndTurnOverThePieces(r, c, piecesTurnedOver, HUMAN) # HUMAN makes a move.
-            childValue = minValue(depth-1, alpha, beta) # recursive case.
-            setOfMoveValuesAndMoves.append(childValue)
+            if depth == 0:
+              childValue = boardScore()
+            else:
+              childValue = minValue(depth-1, alpha, beta) # recursive case.
+            tuplesOfValuesWithTheirMoves.append(childValue)
             takeBackTheMoveAndTurnBackOverThePieces(r,c, piecesTurnedOver, HUMAN)
 
 #-----------Attempt alpha-beta pruning.
@@ -935,7 +930,11 @@ def maxValue(depth, alpha, beta): # Recursive (odd ply) returns best move for HU
             if beta <= alpha: return childValue
 
 #---Return
-    return max(setOfMoveValuesAndMoves)
+    if tuplesOfValuesWithTheirMoves:
+      return max(tuplesOfValuesWithTheirMoves)
+    elif depth == 0:
+      return boardScore()
+    return minValue(depth-1, alpha, beta)
 #----------------------------------------------------------------------------------------------------Othello--
 
 def minValue(depth, alpha, beta): # Recursive (even ply) Returns best move for COMPUTER.
@@ -943,8 +942,6 @@ def minValue(depth, alpha, beta): # Recursive (even ply) Returns best move for C
 #   tuple looks like this: (value, row, col).
 
 #---Initialize.
-    depth = depth-1
-    setOfMoveValuesAndMoves = []
     tuplesOfValuesWithTheirMoves = []
 
 #---Look at all possible moves for HUMAN, and there may be no moves (an important special case).
@@ -956,16 +953,14 @@ def minValue(depth, alpha, beta): # Recursive (even ply) Returns best move for C
             if not piecesTurnedOver:
                continue
 
-            if depth == 0:
-              return boardScore()
-            if not(legalMove()):
-              return maxValue(depth-1, alpha, beta)
-
 #-----------Make a COMPUTER move and store the move with its value in tuplesOfValuesWithTheirMoves.
 #           The value of the COMPUTER's move is the maximum score the HUMAN can obtain in response.
             makeTheMoveAndTurnOverThePieces(r, c, piecesTurnedOver, COMPUTER) # COMPUTER makes a move.
-            childValue = maxValue(depth-1, alpha, beta) # recursive case.
-            setOfMoveValuesAndMoves.append(childValue)
+            if depth == 0:
+              childValue = boardScore()
+            else:
+              childValue = maxValue(depth-1, alpha, beta) # recursive case.
+            tuplesOfValuesWithTheirMoves.append(childValue)
             takeBackTheMoveAndTurnBackOverThePieces(r,c, piecesTurnedOver, COMPUTER)
 
 #-----------Attempt alpha-beta pruning.
@@ -973,7 +968,11 @@ def minValue(depth, alpha, beta): # Recursive (even ply) Returns best move for C
             if beta <= alpha: return childValue
 
 #---Return
-    return min(setOfMoveValuesAndMoves)
+    if tuplesOfValuesWithTheirMoves:
+      return min(tuplesOfValuesWithTheirMoves)
+    if depth == 0:
+      return boardScore()
+    return maxValue(depth-1, alpha, beta)
 #====================================<GLOBAL CONSTANTS and GLOBAL IMPORTS>====================================
 
 from tkinter  import Tk, Canvas, YES, BOTH  # <-- Use Tkinter (capital "T") in Python 2.x

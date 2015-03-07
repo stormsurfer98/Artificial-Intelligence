@@ -1,6 +1,6 @@
 Artificial Intelligence
 =======================
-The following code was written as part of Artificial Intelligence, a course offered at Thomas Jefferson High School for Science and Technology. Parts of the code may have been written by Mr. Michael Stueben and Dr. Shane Torbert, the directors of the course.
+The following code was written by Shrey Gupta as part of Artificial Intelligence, a course offered at Thomas Jefferson High School for Science and Technology. Parts of the code may have been written by Mr. Michael Stueben and Dr. Shane Torbert, the directors of the course.
 
 Note that the following code was written in Python 3.x and will require Python to run. In order to run a program, navigate to the containing folder in Terminal and run the file:
 

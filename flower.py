@@ -27,15 +27,17 @@ def frange(start, stop, step):
 		i += step
 
 def drawLine(x1, y1, x2, y2, kolor = 'WHITE', width = 1):
-	radius = hypot(x2-x1, y2-y1)/7
-	x_step = (x2-x1)/7; y_step = (y2-y1)/7
+	SEGMENTS = 7
+	radius = hypot(x2-x1, y2-y1)/SEGMENTS
 	theta = atan2(y2-y1, x2-x1)
-	for n in range(0, 7):
-		if random() < 0.8: new_theta = theta + 0.2
-		else: new_theta = theta - 0.2
-		new_x = x1 + n*x_step + radius*cos(new_theta)
-		new_y = y1 + n*y_step + radius*sin(new_theta)
-		canvas.create_line(x1 + n*x_step, y1 + n*y_step, new_x, new_y, width = width, fill = kolor)
+	old_x = x1; old_y = y1
+	for n in range(SEGMENTS - 1):
+		if random() < 0.8: theta += 0.2
+		else: theta -= 0.2
+		new_x = old_x + radius*cos(theta); new_y = old_y + radius*sin(theta)
+		canvas.create_line(old_x, old_y, new_x, new_y, width = width, fill = kolor)
+		old_x = new_x; old_y = new_y
+	canvas.create_line(new_x, new_y, x2, y2, width = width, fill = kolor)
 
 def drawFlower(cx, cy, radius):
 	#base case

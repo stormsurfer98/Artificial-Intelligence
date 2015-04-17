@@ -21,11 +21,13 @@ $ python3 file_name.py
 8. **Game of Ghost** (ghost.py): human v. computer game of Ghost (full instructions can be found online).
 9. **Game of Othello** (othello.py): human v. computer game of Othello (full instructions can be found online) utilizing the minimax algorithm and alpha-beta pruning.
 10. **Genome** (genome.py): simulates multiple generations of an organism represented by lists.
+11. **Genome #2** (genome2.py): finds the min for a function using genetic algorithms.
 10. **Machine Vision** (machine_vision.py): recognizes basic shapes in a picture based on AI algorithms (e.g. Gaussian Smoothing, Sobel's Algorithm, Canny Transform, Hough Transform, etc.).
 11. **Railroad** (railroad.py): finds the shortest path between any two railroad stations utilizing A*.
 12. **Random** (quiz_random.py): five (5) different ways to generate a random number.
 13. **Reverse** (reversequiz.py): seven (7) different ways to reverse a list.
 14. **Romania** (romania.py): finds the shortest path between any two cities in Romania utilizing A*.
+15. **Salesman** (salesman.py): simulates the traveling salesman problem (i.e. given a list of cities and the distances between each pair of cities, what is the shortest possible route that visits each city exactly once and returns to the origin city).
 15. **Sudoku Solver** (sudoku.py): solves any 9x9 Sudoku puzzle.
 16. **Trie** (trie.py): creates a "Trie" (tree) for a given textfile of words.
 17. **Word Ladder** (lab04.py): finds the shortest one-letter difference path between any two words (if possible) utilizing A*.

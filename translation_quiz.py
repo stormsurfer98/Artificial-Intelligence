@@ -50,6 +50,18 @@ def drawCircle(x, y, r, image):
 			if round(sqrt((x-i)**2 + (y-j)**2)) == r:
 				image[WIDTH * j + i] = 255
 
+def addToTextFile(image):
+	f = open('shapes-image.txt', 'w')
+	f.write("P3\n")
+	f.write(str(WIDTH) + " " + str(HEIGHT) + "\n")
+	f.write("255\n")
+	count = 0
+	for row in range(HEIGHT):
+		for col in range(WIDTH):
+			for n in range(3): f.write(str(image[row*WIDTH + col]) + " ")
+			count += 1
+			if count%6 == 0: f.write("\n")
+
 def main():
 	image = [0] * HEIGHT * WIDTH
 	imageNoise(500, image)
@@ -57,6 +69,7 @@ def main():
 	drawLineMB(1, 0, image)
 	drawLineRT(5, 30, image)
 	drawCircle(256, 256, 200, image)
+	addToTextFile(image)
 	displayImageInWindow(image)
 	root.mainloop()
 

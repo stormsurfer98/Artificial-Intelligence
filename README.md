@@ -22,6 +22,7 @@ $ python3 file_name.py
 9. **Game of Othello** (othello.py): human v. computer game of Othello (full instructions can be found online) utilizing the minimax algorithm and alpha-beta pruning.
 10. **Genome** (genome.py): simulates multiple generations of an organism represented by lists.
 11. **Genome #2** (genome2.py): finds the min for a function using genetic algorithms.
+12. **Hill Climbing** (hillClimbing.py): finds the min for a function using various techniques, including random search, hill climbing, and the Nelder-Mead algorithm.
 12. **Machine Vision** (machine_vision.py): recognizes basic shapes in a picture based on AI algorithms (e.g. Gaussian Smoothing, Sobel's Algorithm, Canny Transform, Hough Transform, etc.).
 13. **Railroad** (railroad.py): finds the shortest path between any two railroad stations utilizing A*.
 14. **Random** (quiz_random.py): five (5) different ways to generate a random number.

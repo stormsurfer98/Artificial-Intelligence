@@ -23,12 +23,10 @@ $ python3 file_name.py
 10. **Genome** (genome.py): simulates multiple generations of an organism represented by lists.
 11. **Genome #2** (genome2.py): finds the min for a function using genetic algorithms.
 12. **Hill Climbing** (hillClimbing.py): finds the min for a function using various techniques, including random search, hill climbing, and the Nelder-Mead algorithm.
-12. **Machine Vision** (machine_vision.py): recognizes basic shapes in a picture based on AI algorithms (e.g. Gaussian Smoothing, Sobel's Algorithm, Canny Transform, Hough Transform, etc.).
-13. **Railroad** (railroad.py): finds the shortest path between any two railroad stations utilizing A*.
-14. **Random** (quiz_random.py): five (5) different ways to generate a random number.
-15. **Reverse** (reversequiz.py): seven (7) different ways to reverse a list.
-16. **Romania** (romania.py): finds the shortest path between any two cities in Romania utilizing A*.
-17. **Salesman** (salesman.py): simulates the traveling salesman problem (i.e. given a list of cities and the distances between each pair of cities, what is the shortest possible route that visits each city exactly once and returns to the origin city).
-18. **Sudoku Solver** (sudoku.py): solves any 9x9 Sudoku puzzle.
-19. **Trie** (trie.py): creates a "Trie" (tree) for a given textfile of words.
-20. **Word Ladder** (lab04.py): finds the shortest one-letter difference path between any two words (if possible) utilizing A*.
+13. **Machine Vision** (machine_vision.py): recognizes basic shapes in a picture based on AI algorithms (e.g. Gaussian Smoothing, Sobel's Algorithm, Canny Transform, Hough Transform, etc.).
+14. **Railroad** (railroad.py): finds the shortest path between any two railroad stations utilizing A*.
+15. **Romania** (romania.py): finds the shortest path between any two cities in Romania utilizing A*.
+16. **Salesman** (salesman.py): simulates the traveling salesman problem (i.e. given a list of cities and the distances between each pair of cities, what is the shortest possible route that visits each city exactly once and returns to the origin city).
+17. **Sudoku Solver** (sudoku.py): solves any 9x9 Sudoku puzzle.
+18. **Trie** (trie.py): creates a "Trie" (tree) for a given textfile of words.
+19. **Word Ladder** (lab04.py): finds the shortest one-letter difference path between any two words (if possible) utilizing A*.

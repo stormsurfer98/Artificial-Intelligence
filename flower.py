@@ -31,13 +31,13 @@ def drawLine(x1, y1, x2, y2, kolor = 'WHITE', width = 1):
 	radius = hypot(x2-x1, y2-y1)/SEGMENTS
 	theta = atan2(y2-y1, x2-x1)
 	old_x = x1; old_y = y1
-	for n in range(SEGMENTS - 1):
+	for n in range(SEGMENTS):
 		if random() < 0.8: theta += 0.2
 		else: theta -= 0.2
 		new_x = old_x + radius*cos(theta); new_y = old_y + radius*sin(theta)
 		canvas.create_line(old_x, old_y, new_x, new_y, width = width, fill = kolor)
 		old_x = new_x; old_y = new_y
-	canvas.create_line(new_x, new_y, x2, y2, width = width, fill = kolor)
+	return new_x, new_y
 
 def drawFlower(cx, cy, radius):
 	#base case
@@ -47,7 +47,7 @@ def drawFlower(cx, cy, radius):
 	#set color
 	kolor = 'GREEN'
 	width = 2
-	if radius == clock():
+	if radius < 120:
 		kolor = 'WHITE'
 		width = 1
 	if radius < 10:
@@ -58,8 +58,8 @@ def drawFlower(cx, cy, radius):
 	for t in frange(0, 2*pi, 2*pi/7):
 		x = cx + radius*sin(t)
 		y = cy + radius*cos(t)
-		drawLine(cx, cy, x, y, kolor, width)
-		drawFlower(x, y, radius/3) #recurse
+		new_x, new_y = drawLine(cx, cy, x, y, kolor, width)
+		drawFlower(new_x, new_y, radius/3) #recurse
 
 root = Tk()
 canvas = setUpCanvas(root)

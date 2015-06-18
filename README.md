@@ -28,7 +28,6 @@ $ python3 file_name.py
 15. **Neural Networking** (neural.py): family of statistical learning models used to estimate or approximate functions that can depend on a large number of inputs that are generally unknown.
 16. **Railroad** (railroad.py): finds the shortest path between any two railroad stations utilizing A*.
 17. **Romania** (romania.py): finds the shortest path between any two cities in Romania utilizing A*.
-18. **Salesman** (salesman.py): simulates the traveling salesman problem (i.e. given a list of cities and the distances between each pair of cities, what is the shortest possible route that visits each city exactly once and returns to the origin city).
-19. **Sudoku Solver** (sudoku.py): solves any 9x9 Sudoku puzzle.
-20. **Trie** (trie.py): creates a "Trie" (tree) for a given textfile of words.
-21. **Word Ladder** (lab04.py): finds the shortest one-letter difference path between any two words (if possible) utilizing A*.
+18. **Sudoku Solver** (sudoku.py): solves any 9x9 Sudoku puzzle.
+19. **Trie** (trie.py): creates a "Trie" (tree) for a given textfile of words.
+20. **Word Ladder** (lab04.py): finds the shortest one-letter difference path between any two words (if possible) utilizing A*.
